@@ -1,352 +1,352 @@
-import { useState } from "react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart, Cell, ReferenceLine } from "recharts";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iHerb AI Agent Performance</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  :root {
+    --navy:#1A1A40;--purple:#6B3FA0;--teal:#00B4A0;--green:#3BB273;
+    --coral:#F26D5B;--yellow:#F5C242;--blue:#3A86C9;--pink:#E04F8B;
+    --bg:#FAFBFD;--muted:#6B7280;--border:#E5E7EB;--light:#F3F4F6;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--navy);}
 
-const C = {
-  navy: "#1A1A40", purple: "#6B3FA0", teal: "#00B4A0", green: "#3BB273",
-  coral: "#F26D5B", yellow: "#F5C242", blue: "#3A86C9", pink: "#E04F8B",
-  bg: "#FAFBFD", muted: "#6B7280", border: "#E5E7EB", light: "#F3F4F6",
-  purpleLight: "#F3EDFC", greenLight: "#E6F7EF", coralLight: "#FEF0EE",
-  blueLight: "#EBF4FC", tealLight: "#E6FAF6"
-};
+  .hero{background:linear-gradient(135deg,#1A1A40 0%,#3B2667 50%,#6B3FA0 100%);padding:40px 24px 34px;color:#fff;text-align:center;}
+  .hero .logos{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px;}
+  .hero .logos span{font-size:22px;font-weight:900;}
+  .hero .logos .x{font-size:14px;opacity:.4;font-weight:300;}
+  .hero h1{font-size:26px;font-weight:800;margin-bottom:6px;}
+  .hero p{font-size:14px;opacity:.7;}
 
-const arCrData = [
-  { m: "Apr-25", ar: 25, cr: 67, phase: "Scripted" },
-  { m: "May-25", ar: 41, cr: 71, phase: "Gen" },
-  { m: "Jun-25", ar: 46, cr: 69, phase: "Gen" },
-  { m: "Jul-25", ar: 52, cr: 77, phase: "Gen" },
-  { m: "Aug-25", ar: 56, cr: 72, phase: "Gen" },
-  { m: "Sep-25", ar: 58, cr: 70, phase: "Gen" },
-  { m: "Oct-25", ar: 62, cr: 72, phase: "Gen" },
-  { m: "Nov-25", ar: 68, cr: 78, phase: "Gen" },
-  { m: "Dec-25", ar: 74, cr: 77, phase: "Gen" },
-  { m: "Jan-26", ar: 77, cr: 78, phase: "Gen" },
-];
+  .wrap{max-width:960px;margin:0 auto;padding:24px 16px;}
 
-const arCrTrend = [
-  { m: "Jul-25", ar: 74, cr: 85 },
-  { m: "Aug-25", ar: 72, cr: 85 },
-  { m: "Sep-25", ar: 70, cr: 83 },
-  { m: "Oct-25", ar: 72, cr: 86 },
-  { m: "Nov-25", ar: 78, cr: 91 },
-  { m: "Dec-25", ar: 77, cr: 90 },
-];
+  .kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;}
+  .kpi{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px 20px;flex:1;min-width:140;}
+  .kpi .l{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+  .kpi .v{font-size:32px;font-weight:800;margin-top:4px;}
+  .kpi .d{font-size:12px;font-weight:700;margin-top:2px;}
+  .kpi .s{font-size:11px;color:var(--muted);margin-top:2px;}
+  .up{color:var(--green);} .dn{color:var(--coral);}
 
-const csatData = [
-  { m: "Apr-25", overall: 56, agent: null, bot: 58, aiAgent: 55, phase: "Scripted" },
-  { m: "May-25", overall: 52, agent: null, bot: null, aiAgent: 37, phase: "Gen" },
-  { m: "Jun-25", overall: 54, agent: null, bot: null, aiAgent: 42, phase: "Gen" },
-  { m: "Jul-25", overall: 55, agent: null, bot: null, aiAgent: 49, phase: "Gen" },
-  { m: "Aug-25", overall: 57, agent: null, bot: null, aiAgent: 52, phase: "Gen" },
-  { m: "Sep-25", overall: 58, agent: null, bot: null, aiAgent: 55, phase: "Gen" },
-  { m: "Oct-25", overall: 60, agent: null, bot: null, aiAgent: 57, phase: "Gen" },
-  { m: "Nov-25", overall: 63, agent: null, bot: null, aiAgent: 60, phase: "Gen" },
-  { m: "Dec-25", overall: 65, agent: null, bot: null, aiAgent: 62, phase: "Gen" },
-  { m: "Jan-26", overall: 66, agent: null, bot: null, aiAgent: 63, phase: "Gen" },
-];
+  .tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--light);border-radius:10px;padding:4px;}
+  .tab{flex:1;padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;font-family:inherit;background:transparent;color:var(--muted);transition:all .2s;}
+  .tab.active{background:#fff;color:var(--purple);box-shadow:0 1px 4px rgba(0,0,0,.08);}
 
-const comparison = [
-  { metric: "Automated Resolution", scripted: 27, gen: 48, target: 50, unit: "%" },
-  { metric: "Containment", scripted: 69, gen: 66, target: 75, unit: "%" },
-  { metric: "Overall CSAT", scripted: 56, gen: 66, target: 70, unit: "%" },
-  { metric: "AI Agent CSAT", scripted: 55, gen: 63, target: 75, unit: "%" },
-  { metric: "Conversations/mo", scripted: 94, gen: 130, target: 150, unit: "K" },
-];
+  .section{margin-bottom:32px;}
+  .section .hd{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .section .hd .bar{width:4px;height:24px;border-radius:2px;}
+  .section .hd h2{font-size:18px;font-weight:800;}
 
-const Pill = ({ children, bg, color }) => (
-  <span style={{ background: bg, color, padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700 }}>{children}</span>
-);
+  .card{background:#fff;border-radius:14px;border:1px solid var(--border);padding:24px;margin-bottom:16px;}
+  .card.accent-l{border-left:3px solid;}
 
-const MetricCard = ({ label, value, sub, color, change }) => (
-  <div style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 14, padding: "18px 20px", flex: 1, minWidth: 140 }}>
-    <div style={{ fontSize: 12, color: C.muted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
-    <div style={{ fontSize: 32, fontWeight: 800, color, marginTop: 4 }}>{value}</div>
-    {change && <div style={{ fontSize: 12, fontWeight: 700, color: change > 0 ? C.green : C.coral, marginTop: 2 }}>
-      {change > 0 ? "▲" : "▼"} {Math.abs(change)} pts from scripted
-    </div>}
-    {sub && <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{sub}</div>}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+  .delta-row{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;}
+  .delta{border-radius:10px;padding:10px 16px;flex:1;min-width:140;}
+  .delta .dl{font-size:11px;color:var(--muted);font-weight:600;}
+  .delta .dv{font-size:18px;font-weight:800;}
+  .delta .ds{font-size:11px;color:var(--muted);}
+
+  .pill{display:inline-block;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:700;}
+  .legend-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+
+  .csat-card{background:#fff;border-radius:14px;border:1px solid var(--border);padding:20px;text-align:center;}
+  .csat-card .cl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+  .csat-card .cv{font-size:36px;font-weight:800;margin-top:4px;}
+
+  .commentary{border-radius:14px;padding:20px;margin-bottom:12px;border-left:3px solid;}
+  .commentary h3{font-size:14px;font-weight:700;margin-bottom:8px;}
+  .commentary p{font-size:13px;color:var(--muted);line-height:1.7;}
+  .commentary p strong{color:var(--navy);}
+
+  .chart-wrap{position:relative;height:340px;margin-bottom:16px;}
+  .chart-wrap.sm{height:300px;}
+  .chart-caption{text-align:center;font-size:13px;color:var(--muted);font-style:italic;margin-top:8px;}
+
+  .pane{display:none;} .pane.active{display:block;}
+
+  @media(max-width:700px){
+    .grid2,.grid3{grid-template-columns:1fr;}
+    .kpis{gap:8px;} .kpi{min-width:100px;padding:12px 14px;} .kpi .v{font-size:24px;}
+    .chart-wrap{height:280px;} .chart-wrap.sm{height:240px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="logos"><span>ada</span><span class="x">×</span><span>iHerb</span></div>
+  <h1>AI Agent Performance</h1>
+  <p>Scripted → Generative Migration · June 2025 – Present</p>
+</div>
+
+<div class="wrap">
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi"><div class="l">AR (Latest)</div><div class="v" style="color:var(--purple)">48%</div><div class="d up">▲ 21 pts from scripted</div></div>
+    <div class="kpi"><div class="l">Containment</div><div class="v" style="color:var(--teal)">66%</div><div class="s">Target: 75%</div></div>
+    <div class="kpi"><div class="l">Overall CSAT</div><div class="v" style="color:var(--blue)">66%</div><div class="d up">▲ 10 pts from scripted</div></div>
+    <div class="kpi"><div class="l">AI Agent CSAT</div><div class="v" style="color:var(--coral)">63%</div><div class="d up">▲ 26 pts since go-live</div></div>
+    <div class="kpi"><div class="l">Smart Search AR</div><div class="v" style="color:var(--green)">88%</div><div class="s">Conversations API</div></div>
   </div>
-);
 
-const Section = ({ title, children, accent = C.purple }) => (
-  <div style={{ marginBottom: 32 }}>
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-      <div style={{ width: 4, height: 24, borderRadius: 2, background: accent }} />
-      <h2 style={{ fontSize: 18, fontWeight: 800, color: C.navy, margin: 0 }}>{title}</h2>
-    </div>
-    {children}
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('overview',this)">Scripted vs Gen</button>
+    <button class="tab" onclick="showTab('arcr',this)">AR & Containment Trend</button>
+    <button class="tab" onclick="showTab('csat',this)">CSAT Deep Dive</button>
   </div>
-);
 
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 14px", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
-      <div style={{ fontWeight: 700, fontSize: 13, color: C.navy, marginBottom: 4 }}>{label}</div>
-      {payload.map((p, i) => (
-        <div key={i} style={{ fontSize: 12, color: p.color, fontWeight: 600 }}>
-          {p.name}: {p.value}%
+  <!-- ===== OVERVIEW ===== -->
+  <div class="pane active" id="overview">
+    <div class="section">
+      <div class="hd"><div class="bar" style="background:var(--purple)"></div><h2>Scripted vs Generative — Side by Side</h2></div>
+      <div class="card">
+        <div class="chart-wrap"><canvas id="compChart"></canvas></div>
+        <div class="delta-row">
+          <div class="delta" style="background:#E6F7EF"><div class="dl">Automated Resolution</div><div class="dv" style="color:var(--green)">+21%</div><div class="ds">27% → 48%</div></div>
+          <div class="delta" style="background:#FEF0EE"><div class="dl">Containment</div><div class="dv" style="color:var(--coral)">-3%</div><div class="ds">69% → 66%</div></div>
+          <div class="delta" style="background:#E6F7EF"><div class="dl">Overall CSAT</div><div class="dv" style="color:var(--green)">+10%</div><div class="ds">56% → 66%</div></div>
+          <div class="delta" style="background:#E6F7EF"><div class="dl">AI Agent CSAT</div><div class="dv" style="color:var(--green)">+8%</div><div class="ds">55% → 63%</div></div>
+          <div class="delta" style="background:#E6F7EF"><div class="dl">Conversations/mo</div><div class="dv" style="color:var(--green)">+36K</div><div class="ds">94K → 130K</div></div>
         </div>
-      ))}
-    </div>
-  );
-};
-
-export default function Dashboard() {
-  const [tab, setTab] = useState("overview");
-
-  return (
-    <div style={{ fontFamily: "Inter, -apple-system, sans-serif", background: C.bg, minHeight: "100vh", color: C.navy }}>
-      {/* Hero */}
-      <div style={{ background: `linear-gradient(135deg, ${C.navy} 0%, #3B2667 50%, ${C.purple} 100%)`, padding: "36px 24px 32px", color: "#fff", textAlign: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 8 }}>
-          <span style={{ fontSize: 22, fontWeight: 900 }}>ada</span>
-          <span style={{ fontSize: 14, opacity: 0.4 }}>×</span>
-          <span style={{ fontSize: 22, fontWeight: 800 }}>iHerb</span>
-        </div>
-        <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 6px" }}>AI Agent Performance</h1>
-        <p style={{ fontSize: 14, opacity: 0.7, margin: 0 }}>Scripted → Generative Migration · June 2025 – Present</p>
-      </div>
-
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "24px 16px" }}>
-        {/* KPI Cards */}
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 28 }}>
-          <MetricCard label="AR (Latest)" value="48%" color={C.purple} change={21} />
-          <MetricCard label="Containment" value="66%" color={C.teal} sub="Target: 75%" />
-          <MetricCard label="Overall CSAT" value="66%" color={C.blue} change={10} />
-          <MetricCard label="AI Agent CSAT" value="63%" color={C.coral} change={8} />
-          <MetricCard label="Smart Search AR" value="88%" color={C.green} sub="Conversations API" />
-        </div>
-
-        {/* Tabs */}
-        <div style={{ display: "flex", gap: 4, marginBottom: 24, background: C.light, borderRadius: 10, padding: 4 }}>
-          {[["overview", "Scripted vs Gen"], ["arcr", "AR & Containment Trend"], ["csat", "CSAT Deep Dive"]].map(([k, l]) => (
-            <button key={k} onClick={() => setTab(k)} style={{
-              flex: 1, padding: "10px 16px", border: "none", borderRadius: 8, cursor: "pointer",
-              fontWeight: 700, fontSize: 13, fontFamily: "inherit", transition: "all 0.2s",
-              background: tab === k ? "#fff" : "transparent",
-              color: tab === k ? C.purple : C.muted,
-              boxShadow: tab === k ? "0 1px 4px rgba(0,0,0,0.08)" : "none"
-            }}>{l}</button>
-          ))}
-        </div>
-
-        {/* TAB: Overview */}
-        {tab === "overview" && (
-          <>
-            <Section title="Scripted vs Generative — Side by Side" accent={C.purple}>
-              <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: 24 }}>
-                <ResponsiveContainer width="100%" height={340}>
-                  <BarChart data={comparison} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
-                    <XAxis dataKey="metric" tick={{ fontSize: 11, fill: C.muted }} />
-                    <YAxis tick={{ fontSize: 11, fill: C.muted }} />
-                    <Tooltip contentStyle={{ borderRadius: 10, border: `1px solid ${C.border}` }} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="scripted" name="Scripted (H1 2025)" fill="#D1D5DB" radius={[6, 6, 0, 0]} />
-                    <Bar dataKey="gen" name="Generative (Latest)" fill={C.purple} radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-                <div style={{ display: "flex", gap: 16, marginTop: 16, flexWrap: "wrap" }}>
-                  {comparison.map((c, i) => {
-                    const d = c.gen - c.scripted;
-                    return (
-                      <div key={i} style={{ background: d > 0 ? C.greenLight : C.coralLight, borderRadius: 10, padding: "10px 16px", flex: 1, minWidth: 140 }}>
-                        <div style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>{c.metric}</div>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: d > 0 ? C.green : C.coral }}>
-                          {d > 0 ? "+" : ""}{d}{c.unit}
-                        </div>
-                        <div style={{ fontSize: 11, color: C.muted }}>{c.scripted}{c.unit} → {c.gen}{c.unit}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </Section>
-
-            <Section title="Key Takeaways" accent={C.green}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, borderLeft: `3px solid ${C.green}` }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>🚀 AR Nearly Doubled</div>
-                  <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, margin: 0 }}>
-                    Automated Resolution jumped from 27% (scripted) to 48% with the AI Agent — a <strong style={{color: C.green}}>+21pt increase</strong>. The AI Agent's ability to understand intent and resolve complex queries without rigid flows drives this improvement. With Smart Search hitting 88% AR, there's significant headroom.
-                  </p>
-                </div>
-                <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, borderLeft: `3px solid ${C.teal}` }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>📊 Containment Stabilizing</div>
-                  <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, margin: 0 }}>
-                    Containment dipped briefly during migration (74% → 65%) as the bot adapted, but has recovered to 66% and climbing. The dip is expected — generative bots resolve more genuinely rather than containing via dead-ends. Target: <strong style={{color: C.teal}}>75% in 2026</strong>.
-                  </p>
-                </div>
-                <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, borderLeft: `3px solid ${C.blue}` }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>📈 Volume Grew 38%</div>
-                  <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, margin: 0 }}>
-                    Monthly conversations jumped from 94K to 130K — volume nearly doubled in the last few months of 2025. The Conversations API (Smart Search) alone added 60K/mo in English. With non-English support coming, another ~80K/mo projected.
-                  </p>
-                </div>
-                <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, borderLeft: `3px solid ${C.coral}` }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>💡 88% Smart Search AR</div>
-                  <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, margin: 0 }}>
-                    The Conversations API "Smart Search" launched Dec 24, 2025 and is resolving 88% of queries before customers even enter chat. 44K conversations via API vs 87K via chat — nearly ⅓ of all support now starts outside the widget.
-                  </p>
-                </div>
-              </div>
-            </Section>
-          </>
-        )}
-
-        {/* TAB: AR & Containment */}
-        {tab === "arcr" && (
-          <>
-            <Section title="AR & Containment — Monthly Trend" accent={C.purple}>
-              <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: 24 }}>
-                <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-                  <Pill bg={C.purpleLight} color={C.purple}>● AR</Pill>
-                  <Pill bg={C.tealLight} color={C.teal}>● Containment</Pill>
-                  <Pill bg="#FFF3E0" color="#E65100">⚡ Gen Go-Live: June 2025</Pill>
-                </div>
-                <ResponsiveContainer width="100%" height={340}>
-                  <AreaChart data={arCrData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
-                    <defs>
-                      <linearGradient id="gAr" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={C.purple} stopOpacity={0.15} />
-                        <stop offset="95%" stopColor={C.purple} stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="gCr" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={C.teal} stopOpacity={0.15} />
-                        <stop offset="95%" stopColor={C.teal} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
-                    <XAxis dataKey="m" tick={{ fontSize: 11, fill: C.muted }} />
-                    <YAxis domain={[20, 90]} tick={{ fontSize: 11, fill: C.muted }} tickFormatter={v => `${v}%`} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <ReferenceLine x="May-25" stroke={C.coral} strokeDasharray="5 5" label={{ value: "Gen Go-Live", fill: C.coral, fontSize: 11, position: "top" }} />
-                    <Area type="monotone" dataKey="cr" name="Containment" stroke={C.teal} strokeWidth={2.5} fill="url(#gCr)" dot={{ r: 5, fill: C.teal, stroke: "#fff", strokeWidth: 2 }} />
-                    <Area type="monotone" dataKey="ar" name="AR" stroke={C.purple} strokeWidth={2.5} fill="url(#gAr)" dot={{ r: 5, fill: C.purple, stroke: "#fff", strokeWidth: 2 }} />
-                  </AreaChart>
-                </ResponsiveContainer>
-
-                <div style={{ marginTop: 20, padding: "16px 20px", background: C.purpleLight, borderRadius: 12, borderLeft: `3px solid ${C.purple}` }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: C.purple, marginBottom: 6 }}>📈 AR Trajectory Commentary</div>
-                  <p style={{ fontSize: 13, color: C.navy, lineHeight: 1.7, margin: 0 }}>
-                    AR has shown <strong>consistent month-over-month growth</strong> since gen go-live in June 2025. The steepest gains came in the first 2 months (+27pts) as the AI Agent began resolving FAQ and simple order queries that scripted flows couldn't handle flexibly. Growth continued through coaching optimizations, playbook refinements, and knowledge base improvements. The Nov–Jan acceleration (+9pts) coincides with the Conversations API launch, which pushed the blended AR higher. <strong>On track to hit 50%+ AR target.</strong>
-                  </p>
-                </div>
-
-                <div style={{ marginTop: 12, padding: "16px 20px", background: C.tealLight, borderRadius: 12, borderLeft: `3px solid ${C.teal}` }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: C.teal, marginBottom: 6 }}>📊 Containment Trajectory Commentary</div>
-                  <p style={{ fontSize: 13, color: C.navy, lineHeight: 1.7, margin: 0 }}>
-                    Containment initially dipped when transitioning from scripted (67–74%) to generative (71%) as the AI Agent was tuned. It hit a local low in Sep (70%) during language-switching issues and playbook refinements, but has since recovered to <strong>78% and climbing</strong>. The pattern is healthy: generative containment is more "real" — customers get genuine answers vs scripted dead-ends. <strong>Target: 75% sustained in 2026.</strong>
-                  </p>
-                </div>
-              </div>
-            </Section>
-
-            <Section title="Zoomed In: AR & Containment (Jul – Dec 2025)" accent={C.coral}>
-              <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: 24 }}>
-                <p style={{ fontSize: 13, color: C.muted, marginBottom: 16, marginTop: 0 }}>Inspired by the EBR performance slide — showing the steady upward trajectory during the optimization phase.</p>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={arCrTrend} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
-                    <XAxis dataKey="m" tick={{ fontSize: 12, fill: C.muted }} />
-                    <YAxis domain={[65, 95]} tick={{ fontSize: 11, fill: C.muted }} tickFormatter={v => `${v}%`} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Line type="monotone" dataKey="ar" name="AR" stroke={C.blue} strokeWidth={2.5} strokeDasharray="6 3"
-                      dot={{ r: 6, fill: C.blue, stroke: "#fff", strokeWidth: 2 }}
-                      label={{ position: "top", fontSize: 12, fontWeight: 700, fill: C.blue, formatter: v => `${v}%` }}
-                    />
-                    <Line type="monotone" dataKey="cr" name="Containment" stroke={C.coral} strokeWidth={2.5} strokeDasharray="6 3"
-                      dot={{ r: 6, fill: C.coral, stroke: "#fff", strokeWidth: 2 }}
-                      label={{ position: "top", fontSize: 12, fontWeight: 700, fill: C.coral, formatter: v => `${v}%` }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-                <div style={{ textAlign: "center", marginTop: 8, fontSize: 13, color: C.muted, fontStyle: "italic" }}>
-                  Automated resolutions <strong style={{color: C.navy}}>steadily increased</strong> through iHerb's automation efforts and Ada's AI-driven support
-                </div>
-              </div>
-            </Section>
-          </>
-        )}
-
-        {/* TAB: CSAT */}
-        {tab === "csat" && (
-          <>
-            <Section title="CSAT Breakdown: Overall · Agent · AI Agent" accent={C.coral}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
-                <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, textAlign: "center" }}>
-                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Overall CSAT</div>
-                  <div style={{ fontSize: 36, fontWeight: 800, color: C.blue, marginTop: 4 }}>66%</div>
-                  <div style={{ fontSize: 12, color: C.green, fontWeight: 700 }}>▲ +10pts from scripted</div>
-                  <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Scripted: 56% → Gen: 66%</div>
-                </div>
-                <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, textAlign: "center" }}>
-                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Agent CSAT</div>
-                  <div style={{ fontSize: 36, fontWeight: 800, color: C.green, marginTop: 4 }}>82%</div>
-                  <div style={{ fontSize: 12, color: C.muted, fontWeight: 600 }}>Stable · Human benchmark</div>
-                  <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Improved from 62% in 2022</div>
-                </div>
-                <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, textAlign: "center" }}>
-                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>AI Agent CSAT</div>
-                  <div style={{ fontSize: 36, fontWeight: 800, color: C.coral, marginTop: 4 }}>63%</div>
-                  <div style={{ fontSize: 12, color: C.green, fontWeight: 700 }}>▲ +26pts since go-live</div>
-                  <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Launch: 37% → Now: 63%</div>
-                </div>
-              </div>
-
-              <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: 24 }}>
-                <ResponsiveContainer width="100%" height={320}>
-                  <LineChart data={csatData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
-                    <XAxis dataKey="m" tick={{ fontSize: 11, fill: C.muted }} />
-                    <YAxis domain={[30, 90]} tick={{ fontSize: 11, fill: C.muted }} tickFormatter={v => `${v}%`} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <ReferenceLine x="May-25" stroke={C.coral} strokeDasharray="5 5" />
-                    <ReferenceLine y={82} stroke={C.green} strokeDasharray="3 3" label={{ value: "Agent CSAT: 82%", fill: C.green, fontSize: 11, position: "right" }} />
-                    <Line type="monotone" dataKey="overall" name="Overall CSAT" stroke={C.blue} strokeWidth={2.5}
-                      dot={{ r: 5, fill: C.blue, stroke: "#fff", strokeWidth: 2 }} />
-                    <Line type="monotone" dataKey="aiAgent" name="AI Agent CSAT" stroke={C.coral} strokeWidth={2.5}
-                      dot={{ r: 5, fill: C.coral, stroke: "#fff", strokeWidth: 2 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </Section>
-
-            <Section title="CSAT Trend Commentary" accent={C.pink}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
-
-                <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, borderLeft: `3px solid ${C.blue}` }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>📊 Overall CSAT: 56% → 66% <Pill bg={C.greenLight} color={C.green}>+10pts</Pill></div>
-                  <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.7, margin: 0 }}>
-                    Overall CSAT initially dipped to 52% in May 2025 during the gen migration — expected as customers encountered a fundamentally different experience. It recovered quickly and has been on a <strong>consistent upward trajectory</strong>, surpassing the scripted-era peak of 56% by August and reaching 66% by January 2026. The improvement is driven by the AI Agent's natural language ability, better handling of multi-intent queries, and reduction in frustrating dead-end loops. <strong>Target: 70%+ in 2026.</strong>
-                  </p>
-                </div>
-
-                <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, borderLeft: `3px solid ${C.green}` }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>👤 Agent CSAT: 62% → 82% <Pill bg={C.greenLight} color={C.green}>Stable</Pill></div>
-                  <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.7, margin: 0 }}>
-                    Human agent CSAT has been stable at ~82% since the Engage improvements in 2022 (up from 62%). This serves as the <strong>benchmark target for the AI Agent</strong>. Notably, the gap between agent and AI Agent CSAT has been narrowing: it was 45pts at gen go-live (82% vs 37%) and is now <strong>only 19pts (82% vs 63%)</strong>. If the AI Agent CSAT continues its current trajectory of ~3pts/month, it could approach parity by mid-2026.
-                  </p>
-                </div>
-
-                <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${C.border}`, padding: 20, borderLeft: `3px solid ${C.coral}` }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>🤖 AI Agent CSAT: 37% → 63% <Pill bg={C.greenLight} color={C.green}>+26pts</Pill></div>
-                  <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.7, margin: 0 }}>
-                    The most dramatic improvement. AI Agent CSAT <strong>plummeted to 37% at launch</strong> — a known risk during gen migration as the model calibrates to iHerb's complex, multi-language, API-heavy use cases. The recovery has been <strong>remarkable: +26pts in 8 months</strong>. Key drivers include coaching refinements, playbook adherence improvements, language-switching bug fixes, and the team's intensive work on handoff quality. Eric's execs reframed CSAT expectations during this period, acknowledging generative CSAT measures differently than scripted. <strong>Target: 75% in 2026.</strong>
-                  </p>
-                </div>
-
-                <div style={{ background: C.purpleLight, borderRadius: 14, padding: 20, borderLeft: `3px solid ${C.purple}` }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8, color: C.purple }}>💡 Why CSAT Dipped at Launch — And Why It's Normal</div>
-                  <p style={{ fontSize: 13, color: C.navy, lineHeight: 1.7, margin: 0 }}>
-                    The initial CSAT dip is a <strong>well-documented pattern</strong> during scripted → generative migrations. Scripted bots score higher on CSAT for simple, predictable flows because customers know what to expect. Generative bots initially score lower because they attempt to resolve more complex issues (which would have been immediately handed off before), and customers hold them to a higher conversational standard. As the AI Agent improves through coaching, knowledge refinement, and playbook optimization, CSAT recovers and ultimately exceeds scripted levels — which is exactly what we're seeing with iHerb.
-                  </p>
-                </div>
-              </div>
-            </Section>
-          </>
-        )}
       </div>
     </div>
-  );
+
+    <div class="section">
+      <div class="hd"><div class="bar" style="background:var(--green)"></div><h2>Key Takeaways</h2></div>
+      <div class="grid2">
+        <div class="commentary" style="background:#fff;border-color:var(--green)">
+          <h3>🚀 AR Nearly Doubled</h3>
+          <p>Automated Resolution jumped from 27% (scripted) to 48% with the AI Agent — a <strong style="color:var(--green)">+21pt increase</strong>. The AI Agent's ability to understand intent and resolve complex queries without rigid flows drives this improvement. With Smart Search hitting 88% AR, there's significant headroom.</p>
+        </div>
+        <div class="commentary" style="background:#fff;border-color:var(--teal)">
+          <h3>📊 Containment Stabilizing</h3>
+          <p>Containment dipped briefly during migration (74% → 65%) as the bot adapted, but has recovered to 66% and climbing. The dip is expected — generative bots resolve more genuinely rather than containing via dead-ends. <strong>Target: 75% in 2026.</strong></p>
+        </div>
+        <div class="commentary" style="background:#fff;border-color:var(--blue)">
+          <h3>📈 Volume Grew 38%</h3>
+          <p>Monthly conversations jumped from 94K to 130K. The Conversations API (Smart Search) alone added 60K/mo in English. With non-English support coming, another <strong>~80K/mo projected ($300K expansion opportunity).</strong></p>
+        </div>
+        <div class="commentary" style="background:#fff;border-color:var(--coral)">
+          <h3>💡 88% Smart Search AR</h3>
+          <p>The Conversations API "Smart Search" launched Dec 24, 2025 and is resolving <strong>88% of queries before customers even enter chat</strong>. 44K conversations via API vs 87K via chat — nearly ⅓ of all support now starts outside the widget.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== AR & CR ===== -->
+  <div class="pane" id="arcr">
+    <div class="section">
+      <div class="hd"><div class="bar" style="background:var(--purple)"></div><h2>AR & Containment — Monthly Trend</h2></div>
+      <div class="card">
+        <div class="legend-row">
+          <span class="pill" style="background:#F3EDFC;color:var(--purple)">● AR</span>
+          <span class="pill" style="background:#E6FAF6;color:var(--teal)">● Containment</span>
+          <span class="pill" style="background:#FFF3E0;color:#E65100">⚡ Gen Go-Live: June 2025</span>
+        </div>
+        <div class="chart-wrap"><canvas id="arcrChart"></canvas></div>
+        <div class="commentary" style="background:#F3EDFC;border-color:var(--purple)">
+          <h3 style="color:var(--purple)">📈 AR Trajectory Commentary</h3>
+          <p>AR has shown <strong>consistent month-over-month growth</strong> since gen go-live in June 2025. The steepest gains came in the first 2 months (+27pts) as the AI Agent began resolving FAQ and simple order queries that scripted flows couldn't handle flexibly. Growth continued through coaching optimizations, playbook refinements, and knowledge base improvements. The Nov–Jan acceleration (+9pts) coincides with the Conversations API launch. <strong>On track to hit 50%+ AR target.</strong></p>
+        </div>
+        <div class="commentary" style="background:#E6FAF6;border-color:var(--teal)">
+          <h3 style="color:var(--teal)">📊 Containment Trajectory Commentary</h3>
+          <p>Containment initially dipped when transitioning from scripted (67–74%) to generative (71%) as the AI Agent was tuned. It hit a local low in Sep (70%) during language-switching issues, but has since recovered to <strong>78% and climbing</strong>. The pattern is healthy: generative containment is more "real" — customers get genuine answers vs scripted dead-ends. <strong>Target: 75% sustained in 2026.</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="hd"><div class="bar" style="background:var(--coral)"></div><h2>Zoomed In: AR & Containment (Jul – Dec 2025)</h2></div>
+      <div class="card">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Matching the EBR performance slide — showing the steady upward trajectory during the optimization phase.</p>
+        <div class="chart-wrap sm"><canvas id="zoomChart"></canvas></div>
+        <div class="chart-caption">Automated resolutions <strong style="color:var(--navy)">steadily increased</strong> through iHerb's automation efforts and Ada's AI-driven support</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CSAT ===== -->
+  <div class="pane" id="csat">
+    <div class="section">
+      <div class="hd"><div class="bar" style="background:var(--coral)"></div><h2>CSAT Breakdown: Overall · Agent · AI Agent</h2></div>
+
+      <div class="grid3" style="margin-bottom:20px;">
+        <div class="csat-card"><div class="cl">Overall CSAT</div><div class="cv" style="color:var(--blue)">66%</div><div style="font-size:12px;color:var(--green);font-weight:700">▲ +10pts from scripted</div><div style="font-size:11px;color:var(--muted);margin-top:2px">56% → 66%</div></div>
+        <div class="csat-card"><div class="cl">Agent CSAT</div><div class="cv" style="color:var(--green)">82%</div><div style="font-size:12px;color:var(--muted);font-weight:600">Stable · Human benchmark</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Improved from 62% in 2022</div></div>
+        <div class="csat-card"><div class="cl">AI Agent CSAT</div><div class="cv" style="color:var(--coral)">63%</div><div style="font-size:12px;color:var(--green);font-weight:700">▲ +26pts since go-live</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Launch: 37% → Now: 63%</div></div>
+      </div>
+
+      <div class="card">
+        <div class="chart-wrap"><canvas id="csatChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="hd"><div class="bar" style="background:var(--pink)"></div><h2>CSAT Trend Commentary</h2></div>
+
+      <div class="commentary" style="background:#fff;border-color:var(--blue)">
+        <h3>📊 Overall CSAT: 56% → 66% <span class="pill" style="background:#E6F7EF;color:var(--green)">+10pts</span></h3>
+        <p>Overall CSAT initially dipped to 52% in May 2025 during the gen migration — expected as customers encountered a fundamentally different experience. It recovered quickly and has been on a <strong>consistent upward trajectory</strong>, surpassing the scripted-era peak of 56% by August and reaching 66% by January 2026. The improvement is driven by the AI Agent's natural language ability, better handling of multi-intent queries, and reduction in frustrating dead-end loops. <strong>Target: 70%+ in 2026.</strong></p>
+      </div>
+
+      <div class="commentary" style="background:#fff;border-color:var(--green)">
+        <h3>👤 Agent CSAT: 62% → 82% <span class="pill" style="background:#E6F7EF;color:var(--green)">Stable</span></h3>
+        <p>Human agent CSAT has been stable at ~82% since the Engage improvements in 2022 (up from 62%). This serves as the <strong>benchmark target for the AI Agent</strong>. The gap between agent and AI Agent CSAT has been narrowing: it was 45pts at gen go-live (82% vs 37%) and is now <strong>only 19pts (82% vs 63%)</strong>. If the AI Agent continues its current trajectory of ~3pts/month, it could approach parity by mid-2026.</p>
+      </div>
+
+      <div class="commentary" style="background:#fff;border-color:var(--coral)">
+        <h3>🤖 AI Agent CSAT: 37% → 63% <span class="pill" style="background:#E6F7EF;color:var(--green)">+26pts</span></h3>
+        <p>The most dramatic improvement. AI Agent CSAT <strong>plummeted to 37% at launch</strong> — a known risk during gen migration as the model calibrates to iHerb's complex, multi-language, API-heavy use cases. The recovery has been <strong>remarkable: +26pts in 8 months</strong>. Key drivers include coaching refinements, playbook adherence improvements, language-switching bug fixes, and the team's intensive work on handoff quality. Eric's execs reframed CSAT expectations during this period. <strong>Target: 75% in 2026.</strong></p>
+      </div>
+
+      <div class="commentary" style="background:#F3EDFC;border-color:var(--purple)">
+        <h3 style="color:var(--purple)">💡 Why CSAT Dipped at Launch — And Why It's Normal</h3>
+        <p>The initial CSAT dip is a <strong>well-documented pattern</strong> during scripted → generative migrations. Scripted bots score higher on CSAT for simple, predictable flows because customers know what to expect. Generative bots initially score lower because they attempt to resolve more complex issues (which would have been immediately handed off before), and customers hold them to a higher conversational standard. As the AI Agent improves through coaching, knowledge refinement, and playbook optimization, CSAT recovers and ultimately exceeds scripted levels — exactly what we see with iHerb.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="text-align:center;padding:30px 20px;font-size:12px;color:#9CA3AF;border-top:1px solid var(--border);margin-top:20px;">
+  Ada × iHerb · Data from iherb.ada.support & iherb-product-suggest.ada.support · Feb 2026
+</div>
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'arcr' && !window._arcrDone) { drawArcr(); drawZoom(); window._arcrDone = true; }
+  if (id === 'csat' && !window._csatDone) { drawCsat(); window._csatDone = true; }
 }
+
+const P = '#6B3FA0', T = '#00B4A0', G = '#3BB273', Co = '#F26D5B', B = '#3A86C9';
+
+// Comparison bar chart
+new Chart(document.getElementById('compChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Automated\nResolution', 'Containment', 'Overall\nCSAT', 'AI Agent\nCSAT', 'Convos/mo\n(K)'],
+    datasets: [
+      { label: 'Scripted (H1 2025)', data: [27, 69, 56, 55, 94], backgroundColor: '#D1D5DB', borderRadius: 6 },
+      { label: 'Generative (Latest)', data: [48, 66, 66, 63, 130], backgroundColor: P, borderRadius: 6 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels: { font: { family: 'Inter', size: 12, weight: '600' } } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 } } },
+      y: { grid: { color: '#F0F0F0' }, ticks: { font: { family: 'Inter', size: 11 } } }
+    }
+  }
+});
+
+function drawArcr() {
+  const labels = ['Apr-25','May-25','Jun-25','Jul-25','Aug-25','Sep-25','Oct-25','Nov-25','Dec-25','Jan-26'];
+  const ar = [25,41,46,52,56,58,62,68,74,77];
+  const cr = [67,71,69,77,72,70,72,78,77,78];
+  new Chart(document.getElementById('arcrChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'AR', data: ar, borderColor: P, backgroundColor: P+'20', fill: true, tension: .3, pointRadius: 5, pointBackgroundColor: P, pointBorderColor: '#fff', pointBorderWidth: 2, borderWidth: 2.5 },
+        { label: 'Containment', data: cr, borderColor: T, backgroundColor: T+'20', fill: true, tension: .3, pointRadius: 5, pointBackgroundColor: T, pointBorderColor: '#fff', pointBorderWidth: 2, borderWidth: 2.5 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Inter', size: 12, weight: '600' } } },
+        annotation: {}
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 } } },
+        y: { min: 20, max: 90, grid: { color: '#F0F0F0' }, ticks: { font: { family: 'Inter', size: 11 }, callback: v => v+'%' } }
+      }
+    }
+  });
+}
+
+function drawZoom() {
+  const labels = ['Jul-25','Aug-25','Sep-25','Oct-25','Nov-25','Dec-25'];
+  const ar = [74,72,70,72,78,77];
+  const cr = [85,85,83,86,91,90];
+  new Chart(document.getElementById('zoomChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'AR', data: ar, borderColor: B, borderDash: [6,3], tension: .3, pointRadius: 6, pointBackgroundColor: B, pointBorderColor: '#fff', pointBorderWidth: 2, borderWidth: 2.5, fill: false },
+        { label: 'Containment', data: cr, borderColor: Co, borderDash: [6,3], tension: .3, pointRadius: 6, pointBackgroundColor: Co, pointBorderColor: '#fff', pointBorderWidth: 2, borderWidth: 2.5, fill: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Inter', size: 12, weight: '600' } } },
+        datalabels: false
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 12 } } },
+        y: { min: 65, max: 95, grid: { color: '#F0F0F0' }, ticks: { font: { family: 'Inter', size: 11 }, callback: v => v+'%' } }
+      }
+    },
+    plugins: [{
+      afterDatasetsDraw(chart) {
+        const ctx = chart.ctx;
+        chart.data.datasets.forEach((ds, di) => {
+          const meta = chart.getDatasetMeta(di);
+          meta.data.forEach((pt, i) => {
+            ctx.save();
+            ctx.font = 'bold 12px Inter';
+            ctx.fillStyle = ds.borderColor;
+            ctx.textAlign = 'center';
+            ctx.fillText(ds.data[i] + '%', pt.x, pt.y - 14);
+            ctx.restore();
+          });
+        });
+      }
+    }]
+  });
+}
+
+function drawCsat() {
+  const labels = ['Apr-25','May-25','Jun-25','Jul-25','Aug-25','Sep-25','Oct-25','Nov-25','Dec-25','Jan-26'];
+  const overall = [56,52,54,55,57,58,60,63,65,66];
+  const aiAgent = [55,37,42,49,52,55,57,60,62,63];
+  new Chart(document.getElementById('csatChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Overall CSAT', data: overall, borderColor: B, tension: .3, pointRadius: 5, pointBackgroundColor: B, pointBorderColor: '#fff', pointBorderWidth: 2, borderWidth: 2.5, fill: false },
+        { label: 'AI Agent CSAT', data: aiAgent, borderColor: Co, tension: .3, pointRadius: 5, pointBackgroundColor: Co, pointBorderColor: '#fff', pointBorderWidth: 2, borderWidth: 2.5, fill: false },
+        { label: 'Agent CSAT (Benchmark)', data: Array(10).fill(82), borderColor: G, borderDash: [4,4], pointRadius: 0, borderWidth: 2, fill: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { font: { family: 'Inter', size: 12, weight: '600' } } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 } } },
+        y: { min: 30, max: 90, grid: { color: '#F0F0F0' }, ticks: { font: { family: 'Inter', size: 11 }, callback: v => v+'%' } }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
